@@ -1,0 +1,36 @@
+{
+  "name": "tabdancing",
+  "version": "0.0.0",
+  "description": "Inter or cross tab window communication",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha test.js",
+    "compile": "browserify index.js -o dist/tabdancer.js --standalone TabDancer"
+  },
+  "keywords": [
+    "vertigo",
+    "tabs",
+    "tab",
+    "window",
+    "cross",
+    "communication",
+    "real-time",
+    "events",
+    "localstorage",
+    "webworker",
+    "worker",
+    "sharedworker",
+    "shared"
+  ],
+  "author": "Arnout Kazemier",
+  "license": "MIT",
+  "devDependencies": {
+    "assume": "0.0.x",
+    "browserify": "5.11.x",
+    "illuminati": "0.0.x",
+    "pre-commit": "0.0.x"
+  },
+  "dependencies": {
+    "eventemitter3": "0.1.x"
+  }
+}
