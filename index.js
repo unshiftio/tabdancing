@@ -14,9 +14,14 @@ var EventEmitter = require('eventemitter3')
 function Dancer(options) {
   if (!(this instanceof Dancer)) return new Dancer(options);
 
-  this.activated = + new Date();                      // Creation time.
+  options = options || {};
+
+  this.engine = null;                                 // The configured tab engine.
   this.isMaster = false;                              // Are we the master process.
   this.isClient = false;                              // Are we the client process.
+  this.transport = null;                              // The name of the engine.
+  this.options = options;                             // Configuration of things.
+  this.activated = + new Date();                      // Dancer creation time.
   this.prefix = options.prefix || 'dancer';           // Prefix for all events.
   this.encoder = options.encoder || parser.encoder;   // Message encoder.
   this.decoder = options.decocer || parser.decoder;   // Message decoder.
@@ -41,6 +46,51 @@ Dancer.prototype.engines = {
 };
 
 /**
+ * 1. 2. 3. -- GO!
+ *
+ * @api private
+ */
+Dancer.prototype.go = function go() {
+  var selfie = this;
+
+  this.select(function selection(err, engine, master) {
+    //
+    // When things fail, always become master. It's better to have multiple
+    // masters instead of non-receiving clients.
+    //
+    if (err) {
+      selfie.emits('error', err);
+      master = true;
+    }
+
+    selfie.engine = engine;
+    engine.on('data', selfie.emits('data', function parser(str, fn) {
+      selfie.decoder(str, fn);
+    }));
+
+    if (master) return selfie.emit('master', function write(msg) {
+      selfie.encoder(msg, function encoder(err, str) {
+        engine.write(str);
+      });
+    });
+
+  }, this.options);
+
+  return selfie;
+};
+
+/**
+ * Destroy the dancer, nuke all the things and clean up everything.
+ *
+ * @api public
+ */
+Dancer.prototype.destroy = function destroy() {
+  if (this.engine) this.engine.destroy();
+
+  return this;
+};
+
+/**
  * Select an available engine. If no engine is available we automatically assume
  * we should be a master process so connections will be started in a normal way.
  *
@@ -49,7 +99,8 @@ Dancer.prototype.engines = {
  * @api private
  */
 Dancer.prototype.select = function select(fn, options) {
-  var engines = {}
+  var selfie = this
+    , engines = {}
     , keys = []
     , engine;
 
@@ -60,10 +111,14 @@ Dancer.prototype.select = function select(fn, options) {
 
   (function filterate() {
     engine = keys.shift();
-    if (!engine) return fn(new Error('Unable to find a suitable dance partner'));
+    if (!engine) return fn(new Error('Unable to find a suitable dance partner'), undefined, true);
 
     engines[engine].supported(function supported(yay) {
-      if (yay) return engines[engine].listen(fn);
+      if (yay) {
+        selfie.transport = engine;
+        return engines[engine].listen(fn);
+      }
+
       filterate();
     });
   }());
@@ -98,7 +153,7 @@ Dancer.prototype.slave = function slave(fn) {
  * @api private
  */
 Dancer.prototype.consensus = function consensus() {
-
+  return this;
 };
 
 //
