@@ -4,9 +4,10 @@
   "description": "Inter or cross tab window communication",
   "main": "index.js",
   "scripts": {
-    "test": "illuminati",
     "compile": "browserify index.js -o dist/tabdancer.js --standalone TabDancer",
-    "pre-publish": "npm run compile"
+    "example": "npm run compile && node example/index.js",
+    "pre-publish": "npm run compile",
+    "test": "illuminati"
   },
   "keywords": [
     "vertigo",
