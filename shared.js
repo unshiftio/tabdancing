@@ -11,6 +11,9 @@ var EventEmitter = require('eventemitter3');
  * @api public
  */
 function Shared(dancer, options) {
+  if (!(this instanceof Shared)) return new Shared(dancer, options);
+
+  this.dancer = dancer;             // Reference to our dancer instance.
   this.blob = false;                // Check if we support the Blob interface.
   this.worker = 0;                  // Reference to our Worker instance.
   this.url = 0;                     // URL Blob.
@@ -114,7 +117,7 @@ Shared.prototype.write = function write(data) {
  */
 Shared.prototype.end = function end() {
   if (this.url) URL.revokeObjectURL(this.url);
-  if (this.worker) this.worker.terminate();
+  if (this.worker) this.worker.port.close();
 };
 
 /**
@@ -142,7 +145,7 @@ Shared.prototype.supported = function supported(fn) {
    * @api private
    */
   function cleanup() {
-    selfie.destroy();
+    selfie.end();
     if (timer) clearTimeout(timer);
 
     fn(passed);
