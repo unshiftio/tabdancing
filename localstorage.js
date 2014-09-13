@@ -93,6 +93,20 @@ LocalStorage.prototype.write = function write(msg, key) {
 };
 
 /**
+ * Retreive data from the localStorage object.
+ *
+ * @param {String} key The key we wish to retrieve.
+ * @returns {String|Undefined} Data from localStorage.
+ * @api public
+ */
+LocalStorage.prototype.get = function get(key) {
+  key = this.dancer.prefix + key;
+
+  try { return localStorage.getItem(key); }
+  catch (e) { return undefined; }
+};
+
+/**
  * Check if LocalStorage is supported and working as intended as there are
  * various edge cases that we need to detect:
  *
