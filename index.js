@@ -16,6 +16,8 @@ function Dancer(options) {
 
   options = options || {};
 
+  var selfie = this;
+
   this.engine = null;                                 // The configured tab engine.
   this.isMaster = false;                              // Are we the master process.
   this.isClient = false;                              // Are we the client process.
@@ -28,6 +30,9 @@ function Dancer(options) {
 
   if (options.master) this.master(options.master);
   if (options.slave) this.slave(options.slave);
+  if (!options.manual) setTimeout(function gogogo() {
+    selfie.go();
+  });
 }
 
 Dancer.prototype = new EventEmitter();
