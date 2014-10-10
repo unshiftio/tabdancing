@@ -15,12 +15,12 @@ function LocalStorage(dancer, options) {
 
   this.dancer = dancer;   // Reference to the dancer.
   this.timers = {};       // Contains the setInterval references.
-  this.interval = 100;
+  this.interval = 1000;
 }
 
 LocalStorage.prototype = new EventEmitter();
 LocalStorage.prototype.constructor = LocalStorage;
-LocalStorage.prototype.emits = require('./emits');
+LocalStorage.prototype.emits = require('emits');
 
 /**
  * Start listening for storage events and process all the things.
@@ -35,23 +35,24 @@ LocalStorage.prototype.listen = function listen(fn) {
     , master;
 
   window.addEventListener('storage', function storage(evt) {
-    if (!evt.key || evt.key.slice(prefix.length) !== prefix) return;
+    var slice = evt.key.slice(prefix.length + 1);
 
-    selfie.emit(evt.key.slice(prefix.length + 1), evt.newValue);
+    if (!evt.key || slice !== prefix) return;
+    selfie.emit(slice, evt.newValue);
   });
 
   //
   // No active master when the interval has been passed and master has not been
   // updated.
   //
-  if (now - (this.get('master') || 0) > (this.interval + 20)) {
+  if (now - (this.get('master') || now) > (this.interval + 20)) {
     return fn(undefined, this, false);
   }
 
   //
   // Update the master key and write it immediately.
   //
-  this.timer.master = setInterval(function update() {
+  this.timers.master = setInterval(function update() {
     selfie.write(+new Date(), ':master');
   }, this.interval);
   this.write(now, ':master');
@@ -65,7 +66,11 @@ LocalStorage.prototype.listen = function listen(fn) {
  * @api public
  */
 LocalStorage.prototype.end = function destroy() {
-  for (var key in this.timers) clearTimeout(this.timers[key]);
+  for (var key in this.timers) {
+    clearTimeout(this.timers[key]);
+  }
+
+  return this;
 };
 
 /**
@@ -79,17 +84,19 @@ LocalStorage.prototype.end = function destroy() {
 LocalStorage.prototype.write = function write(msg, key) {
   key = this.dancer.prefix + (key || ':data');
 
-  try {
-    localStorage.setItem(key, msg);
-    return true;
-  } catch (e) {
-    //
-    // We failed to write the data to cache, it could be that we wanted to store
-    // more data then available so we could slice the data and send it in
-    // chunks. But we probably need to write a protocol for this.
-    //
-    return false;
-  }
+  return !!this.dancer.encoder(msg, function encode(err, packet) {
+    try {
+      localStorage.setItem(key, packet);
+      return true;
+    } catch (e) {
+      //
+      // We failed to write the data to cache, it could be that we wanted to store
+      // more data then available so we could slice the data and send it in
+      // chunks. But we probably need to write a protocol for this.
+      //
+      return false;
+    }
+  });
 };
 
 /**

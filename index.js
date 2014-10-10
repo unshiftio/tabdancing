@@ -7,6 +7,16 @@ var EventEmitter = require('eventemitter3')
 /**
  * Dancer is a small connection manager which uses inter-tab communication.
  *
+ * Options:
+ *
+ * - `encoder` Custom message encoder.
+ * - `decoder` Custom message decoder.
+ * - `prefix` LocalStorage and message prefix.
+ * - `master` Function to be executed when assigned as master.
+ * - `slave` Function to be executed when assigned as slave.
+ * - `manual` Manual starting of the dancing sequence.
+ * - `worker` The worker.js path for the shared webworker.
+ *
  * @constructor
  * @param {Object} options Dancing configuration.
  * @api public
@@ -19,25 +29,26 @@ function Dancer(options) {
   var selfie = this;
 
   this.engine = null;                                 // The configured tab engine.
+  this.isSlave = false;                               // Are we the client process.
   this.isMaster = false;                              // Are we the master process.
-  this.isClient = false;                              // Are we the client process.
   this.transport = null;                              // The name of the engine.
   this.options = options;                             // Configuration of things.
   this.activated = + new Date();                      // Dancer creation time.
   this.prefix = options.prefix || 'dancer';           // Prefix for all events.
   this.encoder = options.encoder || parser.encoder;   // Message encoder.
   this.decoder = options.decocer || parser.decoder;   // Message decoder.
+  this.workerpath = options.worker || '/worker.js';   // Path of the Shared Worker.
 
   if (options.master) this.master(options.master);
   if (options.slave) this.slave(options.slave);
   if (!options.manual) setTimeout(function gogogo() {
     selfie.go();
-  });
+  }, 0);
 }
 
 Dancer.prototype = new EventEmitter();
 Dancer.prototype.constructor = Dancer;
-Dancer.prototype.emits = require('./emits');
+Dancer.prototype.emits = require('emits');
 
 /**
  * The different engines that we support for inter tab communication.
@@ -69,19 +80,21 @@ Dancer.prototype.go = function go() {
     }
 
     selfie.engine = engine;
-    engine.on('data', selfie.emits('data', function parser(str, fn) {
-      selfie.decoder(str, fn);
-    }));
+    engine.on('data', selfie.emits('data'));
 
-    if (master) return selfie.emit('master', function write(msg) {
-      selfie.encoder(msg, function encoder(err, str) {
-        engine.write(str);
-      });
-    });
-
+    if (master) return selfie.emit('master');
   }, this.options);
 
+  this.on('incoming', function incoming(msg) {
+    selfie.write(msg);
+  });
+
   return selfie;
+};
+
+Dancer.prototype.write = function write(msg) {
+  if (!this.engine) return false;
+  return this.engine.write(msg);
 };
 
 /**
@@ -89,8 +102,12 @@ Dancer.prototype.go = function go() {
  *
  * @api public
  */
-Dancer.prototype.destroy = function destroy() {
-  if (this.engine) this.engine.destroy();
+Dancer.prototype.end = function end() {
+  if (this.engine) this.engine.end();
+
+  this.isMaster = this.isSlave = false;
+  this.transport = this.engine = null;
+  this.removeAllListeners();
 
   return this;
 };
