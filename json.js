@@ -5,6 +5,7 @@
  *
  * @param {Mixed} data The data that needs to be transformed into a string.
  * @param {Function} fn Completion callback.
+ * @returns {Mixed} Whatever fn returned.
  * @api public
  */
 exports.encoder = function encoder(data, fn) {
@@ -13,7 +14,7 @@ exports.encoder = function encoder(data, fn) {
   try { data = JSON.stringify(data); }
   catch (e) { err = e; }
 
-  fn(err, data);
+  return fn(err, data);
 };
 
 /**
@@ -21,6 +22,7 @@ exports.encoder = function encoder(data, fn) {
  *
  * @param {Mixed} data The data that needs to be parsed from a string.
  * @param {Function} fn Completion callback.
+ * @returns {Mixed} Whatever fn returned.
  * @api public
  */
 exports.decoder = function decoder(data, fn) {
@@ -31,5 +33,5 @@ exports.decoder = function decoder(data, fn) {
   try { data = JSON.parse(data); }
   catch (e) { err = e; }
 
-  fn(err, data);
+  return fn(err, data);
 };
