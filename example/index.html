@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>TabDancer</title>
+</head>
+<body>
+  <script src="/tabdancer.js"></script>
+  <script>
+    var dancer = new TabDancer();
+
+    dancer.slave(function slave() {
+      this.on('data', function (msg) {
+        console.log('slave:data', msg);
+      });
+    });
+
+    dancer.master(function master() {
+      var ws = new WebSocket('ws://localhost:8080/');
+
+      ws.onmessage = this.emits('incoming', function (evt) {
+        return evt.data;
+      });
+
+      this.on('outgoing', function (msg) {
+        console.log('master:outgoing', msg)
+        ws.send(msg);
+      });
+    });
+  </script>
+</body>
+</html>

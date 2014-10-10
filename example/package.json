@@ -1,0 +1,10 @@
+{
+  "name": "tabdancer-example",
+  "version": "0.0.0",
+  "description": "Example of using tabdancer to share connections between tabs",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^0.4.32"
+  }
+}
