@@ -4,9 +4,7 @@
   "description": "Inter or cross tab window communication",
   "main": "index.js",
   "scripts": {
-    "compile": "browserify index.js -o dist/tabdancer.js --standalone TabDancer",
     "example": "npm run compile && node example/index.js",
-    "pre-publish": "npm run compile",
     "test": "illuminati"
   },
   "keywords": [
