@@ -7,6 +7,10 @@
     "example": "npm run compile && node example/index.js",
     "test": "illuminati"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/unshift/tabdancing"
+  },
   "keywords": [
     "vertigo",
     "tabs",
