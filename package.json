@@ -29,13 +29,13 @@
   "author": "Arnout Kazemier",
   "license": "MIT",
   "devDependencies": {
-    "assume": "0.0.x",
-    "browserify": "5.11.x",
+    "assume": "~1.4.1",
+    "browserify": "~13.1.1",
     "illuminati": "0.0.x",
-    "pre-commit": "0.0.x"
+    "pre-commit": "~1.1.3"
   },
   "dependencies": {
-    "emits": "1.0.x",
-    "eventemitter3": "0.1.x"
+    "emits": "~3.0.0",
+    "eventemitter3": "~2.0.2"
   }
 }
